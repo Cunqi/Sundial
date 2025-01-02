@@ -1,5 +1,5 @@
 //
-//  SDateFeature.swift
+//  SCalendarDateGenerator.swift
 //  Sundial
 //
 //  Created by Cunqi Xiao on 12/29/24.
@@ -7,7 +7,7 @@
 
 import Foundation
 
-class SDateFeature {
+class SCalendarDateGenerator {
     static let formatter: DateFormatter = .init()
 
     // MARK: - Internal methods

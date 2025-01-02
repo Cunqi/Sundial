@@ -35,9 +35,9 @@ struct SCalendarNavBar: View {
     var collectionLabelView: some View {
         VStack(alignment: .leading, spacing: .zero) {
             if let firstDayOfCollection = collection?.days.first?.date {
-                Text(firstDayOfCollection, formatter: SDateFeature.formatter("yyyy"))
+                Text(firstDayOfCollection, formatter: SCalendarDateGenerator.formatter("yyyy"))
                     .font(.caption)
-                Text(firstDayOfCollection, formatter: SDateFeature.formatter("MMMM"))
+                Text(firstDayOfCollection, formatter: SCalendarDateGenerator.formatter("MMMM"))
                     .font(.title.bold())
             }
         }
@@ -47,7 +47,7 @@ struct SCalendarNavBar: View {
     var navButtonGroup: some View {
         Button(action: {
             withAnimation(.snappy) {
-                moveToPreviousItem()
+                context.moveToPreviousIndex()
             }
         }) {
             Image(systemName: "chevron.left")
@@ -56,25 +56,11 @@ struct SCalendarNavBar: View {
 
         Button(action: {
             withAnimation(.snappy) {
-                moveToNextItem()
+                context.moveToNextIndex()
             }
         }) {
             Image(systemName: "chevron.right")
         }
         .disabled(isNextDisabled)
-    }
-
-    // MARK: - Private methods
-
-    private func moveToPreviousItem() {
-        if let currentItemIndex = context.currentItemIndex {
-            context.currentItemIndex = currentItemIndex - 1
-        }
-    }
-
-    private func moveToNextItem() {
-        if let currentItemIndex = context.currentItemIndex {
-            context.currentItemIndex = currentItemIndex + 1
-        }
     }
 }

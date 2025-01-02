@@ -26,10 +26,17 @@ class SCalendarContext: ObservableObject {
         items[safe: currentItemIndex]
     }
 
+    // MARK: - Private properties
+
+    private var dataProvider: any SDayCollectionDataProvider
+    private var calendarViewType: SCalendarViewType
+
     // MARK: - Initializers
 
-    init(dateRange: ClosedRange<Date>) {
+    init(dateRange: ClosedRange<Date>, calendarViewType: SCalendarViewType) {
         self.dateRange = dateRange
+        self.calendarViewType = calendarViewType
+        self.dataProvider = SCalendarContext.makeDataProvider(for: calendarViewType, dateRange: dateRange)
     }
 
     // MARK: - Internal methods
@@ -38,19 +45,20 @@ class SCalendarContext: ObservableObject {
         items[safe: index]
     }
 
-    func setupItems(from date: Date) {
+    func setupItems(from date: Date, calendarViewType: SCalendarViewType) {
+        switchDataProviderIfNeeded(for: calendarViewType)
         guard items.isEmpty else {
             return
         }
 
         var initialIndex = 0
-        let currentItem = fetchItem(for: date, calendar: coordinator.calendar)
-        if let previousItem = fetchPreviousItem(from: currentItem, calendar: coordinator.calendar) {
+        let currentItem = dataProvider.fetchItem(for: date, calendar: coordinator.calendar)
+        if let previousItem = dataProvider.fetchPreviousItem(from: currentItem, calendar: coordinator.calendar) {
             items.append(previousItem)
             initialIndex = 1
         }
         items.append(currentItem)
-        if let nextItem = fetchNextItem(from: currentItem, calendar: coordinator.calendar) {
+        if let nextItem = dataProvider.fetchNextItem(from: currentItem, calendar: coordinator.calendar) {
             items.append(nextItem)
         }
         currentItemIndex = initialIndex
@@ -58,16 +66,14 @@ class SCalendarContext: ObservableObject {
 
     func updateItemsIfNeeded(from date: Date) {
         // Check if date is out of range
-        guard let currentItemIndex, let currentItem else {
+        guard let currentItem else {
             return
         }
         guard let itemRange = currentItem.dateRange, !itemRange.contains(date) else {
-            let updatedCalendarItem = select(date: date, at: currentItem)
-            items[currentItemIndex] = updatedCalendarItem
             return
         }
 
-        let updatedItem = fetchItem(for: date, calendar: coordinator.calendar)
+        let updatedItem = dataProvider.fetchItem(for: date, calendar: coordinator.calendar)
         guard let firstDayOfCurrentItem = currentItem.days.first,
               let firstDayOfUpdatedItem = updatedItem.days.first,
               !firstDayOfCurrentItem.isSameDay(as: firstDayOfUpdatedItem, calendar: coordinator.calendar)
@@ -75,7 +81,7 @@ class SCalendarContext: ObservableObject {
             return
         }
         items.removeAll()
-        setupItems(from: date)
+        setupItems(from: date, calendarViewType: calendarViewType)
     }
 
     func markAsNeedsToFetchMoreItems() {
@@ -91,13 +97,13 @@ class SCalendarContext: ObservableObject {
             return
         }
         if currentItemIndex == 0 {
-            if let previousItem = fetchPreviousItem(from: currentItem, calendar: coordinator.calendar) {
+            if let previousItem = dataProvider.fetchPreviousItem(from: currentItem, calendar: coordinator.calendar) {
                 items.insert(previousItem, at: 0)
                 items.removeLast()
                 currentItemIndex = 1
             }
         } else if currentItemIndex == items.count - 1 {
-            if let nextItem = fetchNextItem(from: currentItem, calendar: coordinator.calendar) {
+            if let nextItem = dataProvider.fetchNextItem(from: currentItem, calendar: coordinator.calendar) {
                 items.append(nextItem)
                 items.removeFirst()
                 currentItemIndex = items.count - 2
@@ -105,27 +111,38 @@ class SCalendarContext: ObservableObject {
         }
     }
 
-    func fetchItem(for _: Date, calendar _: Calendar) -> DayCollection {
-        fatalError("Subclass should override this method")
-    }
-
-    func fetchPreviousItem(from _: DayCollection, calendar _: Calendar) -> DayCollection? {
-        fatalError("Subclass should override this method")
-    }
-
-    func fetchNextItem(from _: DayCollection, calendar _: Calendar) -> DayCollection? {
-        fatalError("Subclass should override this method")
-    }
-
-    func select(date: Date, at item: DayCollection) -> DayCollection {
-        var updatedItem = item
-        if let index = updatedItem.days.firstIndex(where: { $0.isSelected }) {
-            updatedItem.days[index].isSelected = false
+    func moveToPreviousIndex() {
+        guard let currentItemIndex, currentItemIndex - 1 >= 0 else {
+            return
         }
+        self.currentItemIndex = currentItemIndex - 1
+    }
 
-        if let index = updatedItem.days.firstIndex(where: { $0.date.isSameDay(as: date, calendar: coordinator.calendar) }) {
-            updatedItem.days[index].isSelected = true
+    func moveToNextIndex() {
+        guard let currentItemIndex, currentItemIndex + 1 < items.count else {
+            return
         }
-        return updatedItem
+        self.currentItemIndex = currentItemIndex + 1
+    }
+
+    // MARK: - Private methods
+
+    private static func makeDataProvider(for viewType: SCalendarViewType, dateRange: ClosedRange<Date>) -> any SDayCollectionDataProvider {
+        switch viewType {
+        case .month:
+            return SMonthlyDayCollectionDataProvider(dateRange: dateRange)
+        case .week:
+            return SWeeklyDayCollectionDataProvider(dateRange: dateRange)
+        }
+    }
+
+    private func switchDataProviderIfNeeded(for viewType: SCalendarViewType) {
+        guard viewType != calendarViewType else {
+            return
+        }
+        calendarViewType = viewType
+        dataProvider = SCalendarContext.makeDataProvider(for: viewType, dateRange: dateRange)
+
+        items.removeAll()
     }
 }

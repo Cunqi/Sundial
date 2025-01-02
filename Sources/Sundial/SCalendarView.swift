@@ -13,7 +13,7 @@ public enum SCalendarViewType {
 }
 
 public struct SCalendarView<DayView: SDayView>: View {
-    public typealias DayViewBuilder = (SDay, SCalendarCoordinator) -> DayView
+    public typealias DayViewBuilder = (SDay, SCalendarCoordinator, Binding<Date>) -> DayView
 
     // MARK: - Internal properties
 
@@ -39,7 +39,7 @@ public struct SCalendarView<DayView: SDayView>: View {
     {
         self.calendarViewType = calendarViewType
         _selectedDate = selectedDate
-        _context = StateObject(wrappedValue: SCalendarView.makeCalendarContext(for: calendarViewType, dateRange: dateRange))
+        _context = StateObject(wrappedValue: SCalendarContext(dateRange: dateRange, calendarViewType: calendarViewType))
         self.dayViewBuilder = dayViewBuilder
     }
 
@@ -49,16 +49,15 @@ public struct SCalendarView<DayView: SDayView>: View {
     {
         self.calendarViewType = calendarViewType
         _selectedDate = selectedDate
-        _context = StateObject(wrappedValue: SCalendarView.makeCalendarContext(for: calendarViewType, dateRange: dateRange))
-        dayViewBuilder = { day, coordinator in
-            SDefaultDayView(coordinator: coordinator, day: day)
+        _context = StateObject(wrappedValue: SCalendarContext(dateRange: dateRange, calendarViewType: calendarViewType))
+        dayViewBuilder = { day, coordinator, selectedDate in
+            SDefaultDayView(coordinator: coordinator, day: day, selectedDate: selectedDate)
         }
     }
 
     // MARK: - Views
 
     public var body: some View {
-        let _ = Self._printChanges()
         VStack(spacing: 8) {
             if calendarViewType == .month {
                 SCalendarNavBar()
@@ -100,25 +99,14 @@ public struct SCalendarView<DayView: SDayView>: View {
         }
         .environmentObject(context)
         .environmentObject(metadata)
-        .task {
-            context.setupItems(from: selectedDate)
+        .task(id: calendarViewType) {
+            context.setupItems(from: selectedDate, calendarViewType: calendarViewType)
         }
         .onChange(of: context.currentItemIndex) { _, _ in
             context.markAsNeedsToFetchMoreItems()
         }
         .onChange(of: selectedDate) { _, newValue in
             context.updateItemsIfNeeded(from: newValue)
-        }
-    }
-
-    // MARK: - Private methods
-
-    private static func makeCalendarContext(for viewType: SCalendarViewType, dateRange: ClosedRange<Date>) -> SCalendarContext {
-        switch viewType {
-        case .month:
-            return SMonthlyCalendarContext(dateRange: dateRange)
-        case .week:
-            return SWeeklyCalendarContext(dateRange: dateRange)
         }
     }
 }
@@ -131,11 +119,11 @@ struct SCalendarDayCollectionView<DayView: SDayView>: View {
 
     var index: Int
 
+    @Binding var selectedDate: Date
+
     var dayCollection: SCalendarContext.DayCollection {
         context.items[index]
     }
-
-    @Binding var selectedDate: Date
 
     var dayViewBuilder: SCalendarView<DayView>.DayViewBuilder
 
@@ -147,11 +135,9 @@ struct SCalendarDayCollectionView<DayView: SDayView>: View {
             }
 
             ForEach(dayCollection.days) { day in
-                dayViewBuilder(day, context.coordinator)
-                    .onTapGesture {
-                        withAnimation(.snappy) {
-                            selectedDate = day.date
-                        }
+                dayViewBuilder(day, context.coordinator, $selectedDate)
+                    .transaction { transaction in
+                        transaction.animation = .snappy
                     }
             }
         }

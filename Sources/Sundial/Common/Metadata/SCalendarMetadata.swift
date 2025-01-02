@@ -9,7 +9,7 @@ import SwiftUI
 
 public class SCalendarMetadata: ObservableObject {
 
-    @Published public var weekdaySymbols: [String] = SDateFeature.formatter.veryShortWeekdaySymbols
+    @Published public var weekdaySymbols: [String] = SCalendarDateGenerator.formatter.veryShortWeekdaySymbols
 
     @Published public var itemFont: Font = .body
 

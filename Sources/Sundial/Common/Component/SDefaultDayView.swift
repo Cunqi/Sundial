@@ -20,10 +20,16 @@ public struct SDefaultDayView: SDayView {
 
     public var day: SDay
 
+    @Binding var selectedDate: Date
+
     // MARK: - Private properties
 
+    private var isSelected: Bool {
+        day.isSameDay(as: selectedDate, calendar: coordinator.calendar)
+    }
+
     private var foregroundColor: Color {
-        if day.isSelected {
+        if isSelected {
             return .white
         } else if day.isDisabled {
             return .secondary
@@ -34,28 +40,33 @@ public struct SDefaultDayView: SDayView {
 
     // MARK: - Initializers
 
-    public init(coordinator: SCalendarCoordinator, day: SDay) {
+    public init(coordinator: SCalendarCoordinator, day: SDay, selectedDate: Binding<Date>) {
         self.coordinator = coordinator
         self.day = day
+        _selectedDate = selectedDate
     }
 
     public var body: some View {
-        let _ = Self._printChanges()
         VStack(spacing: 4) {
             Text(day.date, formatter: coordinator.dayFormatter)
                 .foregroundStyle(foregroundColor)
                 .frame(maxWidth: .infinity)
                 .padding(8)
                 .background {
-                    if day.isSelected {
+                    if isSelected {
                         RoundedRectangle(cornerRadius: 8)
                             .fill(Color.accentColor)
                             .aspectRatio(1.0, contentMode: .fit)
+                            .transition(.scale.combined(with: .opacity))
                     }
                 }
-
                 .contentShape(.rect)
                 .allowsHitTesting(!day.isDisabled)
+                .onTapGesture {
+                    withAnimation(.snappy) {
+                        selectedDate = day.date
+                    }
+                }
 
             todayIndicator
         }
