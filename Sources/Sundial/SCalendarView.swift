@@ -67,36 +67,36 @@ public struct SCalendarView<DayView: SDayView>: View {
 
             SCalendarWeekdayView(metadata: metadata)
 
-            TabView(selection: $context.currentItemIndex) {
-                ForEach(context.items.indices, id: \.self) { index in
-                    SCalendarDayCollectionView(
-                        index: index,
-                        selectedDate: $selectedDate,
-                        dayViewBuilder: dayViewBuilder
-                    )
-                    .tag(index)
-                    .containerRelativeFrame(.horizontal)
-                    .onGeometryChange(for: CGFloat.self, of: {
-                        $0.size.height
-                    }) { newValue in
-                        tabViewHeight = newValue
-                    }
-                    .onGeometryChange(for: CGFloat.self, of: {
-                        $0.frame(in: .global).minX
-                    }) { newValue in
-                        if newValue.rounded() == tabViewMinX.rounded() && context.shouldFetchMoreItems {
-                            context.fetchMoreItemsIfNeeded()
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(alignment: .top, spacing: .zero) {
+                    ForEach(context.items.indices, id: \.self) { index in
+                        SCalendarDayCollectionView(
+                            index: index,
+                            selectedDate: $selectedDate,
+                            dayViewBuilder: dayViewBuilder
+                        )
+                        .tag(index)
+                        .containerRelativeFrame(.horizontal)
+                        .onGeometryChange(for: CGRect.self, of: {
+                            $0.frame(in: .scrollView)
+                        }) { newValue in
+                            guard index == 0 else {
+                                return
+                            }
+                            let offsetX = newValue.minX.magnitude
+                            let rightMostOffsetX = newValue.width * CGFloat(context.items.count - 1)
+                            let hasReachedBoundary = offsetX == 0 || offsetX == rightMostOffsetX
+                            if hasReachedBoundary && context.shouldFetchMoreItems {
+                                context.fetchMoreItemsIfNeeded()
+                            }
                         }
                     }
                 }
+                .scrollTargetLayout()
             }
-            .tabViewStyle(.page(indexDisplayMode: .never))
-            .frame(height: tabViewHeight)
-            .onGeometryChange(for: CGFloat.self, of: {
-                $0.frame(in: .global).minX
-            }) { newValue in
-                tabViewMinX = newValue
-            }
+            .coordinateSpace(.scrollView)
+            .scrollPosition(id: $context.currentItemIndex)
+            .scrollTargetBehavior(.paging)
         }
         .environmentObject(context)
         .environmentObject(metadata)
@@ -154,6 +154,9 @@ struct SCalendarDayCollectionView<DayView: SDayView>: View {
                         }
                     }
             }
+        }
+        .transaction { transaction in
+            transaction.animation = nil
         }
     }
 }

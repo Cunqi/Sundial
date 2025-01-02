@@ -9,13 +9,14 @@ import Foundation
 
 class SCalendarContext: ObservableObject {
     typealias DayCollection = any SDayCollection
+
     // MARK: - Internal properties
 
     var coordinator = SCalendarCoordinator()
 
     var dateRange: ClosedRange<Date>
 
-    @Published var currentItemIndex: Int = 0
+    @Published var currentItemIndex: Int? = 0
 
     @Published var items: [DayCollection] = []
 
@@ -57,7 +58,7 @@ class SCalendarContext: ObservableObject {
 
     func updateItemsIfNeeded(from date: Date) {
         // Check if date is out of range
-        guard let currentItem else {
+        guard let currentItemIndex, let currentItem else {
             return
         }
         guard let itemRange = currentItem.dateRange, !itemRange.contains(date) else {
@@ -85,7 +86,7 @@ class SCalendarContext: ObservableObject {
         defer {
             shouldFetchMoreItems = false
         }
-        
+
         guard let currentItem else {
             return
         }

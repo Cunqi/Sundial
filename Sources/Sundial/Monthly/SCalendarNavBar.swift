@@ -46,7 +46,7 @@ struct SCalendarNavBar: View {
     @ViewBuilder
     var navButtonGroup: some View {
         Button(action: {
-            withAnimation {
+            withAnimation(.snappy) {
                 moveToPreviousItem()
             }
         }) {
@@ -55,7 +55,7 @@ struct SCalendarNavBar: View {
         .disabled(isPreviousDisabled)
 
         Button(action: {
-            withAnimation {
+            withAnimation(.snappy) {
                 moveToNextItem()
             }
         }) {
@@ -67,10 +67,14 @@ struct SCalendarNavBar: View {
     // MARK: - Private methods
 
     private func moveToPreviousItem() {
-        context.currentItemIndex -= 1
+        if let currentItemIndex = context.currentItemIndex {
+            context.currentItemIndex = currentItemIndex - 1
+        }
     }
 
     private func moveToNextItem() {
-        context.currentItemIndex += 1
+        if let currentItemIndex = context.currentItemIndex {
+            context.currentItemIndex = currentItemIndex + 1
+        }
     }
 }
