@@ -66,10 +66,11 @@ class SCalendarContext: ObservableObject {
 
     func updateItemsIfNeeded(from date: Date) {
         // Check if date is out of range
-        guard let currentItem else {
+        guard let currentItemIndex, let currentItem else {
             return
         }
         guard let itemRange = currentItem.dateRange, !itemRange.contains(date) else {
+            items[currentItemIndex] = select(date: date, for: currentItem)
             return
         }
 
@@ -82,6 +83,18 @@ class SCalendarContext: ObservableObject {
         }
         items.removeAll()
         setupItems(from: date, calendarViewType: calendarViewType)
+    }
+
+    func select(date: Date, for item: DayCollection) -> DayCollection {
+        var updatedItem = item
+        if let index = updatedItem.days.firstIndex(where: { $0.isSelected }) {
+            updatedItem.days[index].isSelected = false
+        }
+
+        if let index = updatedItem.days.firstIndex(where: { $0.isSameDay(as: date, calendar: coordinator.calendar) }) {
+            updatedItem.days[index].isSelected = true
+        }
+        return updatedItem
     }
 
     func markAsNeedsToFetchMoreItems() {

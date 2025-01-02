@@ -34,8 +34,4 @@ struct SWeek: SDayCollection {
         self.hasPrevious = hasPrevious
         self.hasNext = hasNext
     }
-
-    func updateDisabledDays(with _: ClosedRange<Date>) -> SWeek {
-        self
-    }
 }

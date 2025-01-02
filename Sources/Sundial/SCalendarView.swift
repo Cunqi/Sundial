@@ -13,7 +13,7 @@ public enum SCalendarViewType {
 }
 
 public struct SCalendarView<DayView: SDayView>: View {
-    public typealias DayViewBuilder = (SDay, SCalendarCoordinator, Binding<Date>) -> DayView
+    public typealias DayViewBuilder = (SDay, SCalendarCoordinator) -> DayView
 
     // MARK: - Internal properties
 
@@ -27,8 +27,6 @@ public struct SCalendarView<DayView: SDayView>: View {
 
     @StateObject private var context: SCalendarContext
     @StateObject private var metadata = SCalendarMetadata()
-    @State private var tabViewHeight: CGFloat = 1
-    @State private var tabViewMinX: CGFloat = 0
 
     // MARK: - Initializers
 
@@ -50,8 +48,8 @@ public struct SCalendarView<DayView: SDayView>: View {
         self.calendarViewType = calendarViewType
         _selectedDate = selectedDate
         _context = StateObject(wrappedValue: SCalendarContext(dateRange: dateRange, calendarViewType: calendarViewType))
-        dayViewBuilder = { day, coordinator, selectedDate in
-            SDefaultDayView(coordinator: coordinator, day: day, selectedDate: selectedDate)
+        dayViewBuilder = { day, coordinator in
+            SDefaultDayView(coordinator: coordinator, day: day)
         }
     }
 
@@ -69,11 +67,7 @@ public struct SCalendarView<DayView: SDayView>: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(alignment: .top, spacing: .zero) {
                     ForEach(context.items.indices, id: \.self) { index in
-                        SCalendarDayCollectionView(
-                            index: index,
-                            selectedDate: $selectedDate,
-                            dayViewBuilder: dayViewBuilder
-                        )
+                        makeCalendarDayCollectionView(index: index)
                         .tag(index)
                         .containerRelativeFrame(.horizontal)
                         .onGeometryChange(for: CGRect.self, of: {
@@ -109,33 +103,23 @@ public struct SCalendarView<DayView: SDayView>: View {
             context.updateItemsIfNeeded(from: newValue)
         }
     }
-}
 
-struct SCalendarDayCollectionView<DayView: SDayView>: View {
-    @EnvironmentObject var metadata: SCalendarMetadata
-    @EnvironmentObject var context: SCalendarContext
+    @ViewBuilder
+    func makeCalendarDayCollectionView(index: Int) -> some View {
+        let dayCollection = context.items[index]
 
-    // MARK: - Internal properties
-
-    var index: Int
-
-    @Binding var selectedDate: Date
-
-    var dayCollection: SCalendarContext.DayCollection {
-        context.items[index]
-    }
-
-    var dayViewBuilder: SCalendarView<DayView>.DayViewBuilder
-
-    var body: some View {
-        let _ = Self._printChanges()
         LazyVGrid(columns: metadata.columns, spacing: .zero) {
             ForEach(0 ..< dayCollection.numOfLeadingDays, id: \.self) { _ in
                 Spacer()
             }
 
             ForEach(dayCollection.days) { day in
-                dayViewBuilder(day, context.coordinator, $selectedDate)
+                dayViewBuilder(day, context.coordinator)
+                    .onTapGesture {
+                        withAnimation(.snappy) {
+                            selectedDate = day.date
+                        }
+                    }
                     .transaction { transaction in
                         transaction.animation = .snappy
                     }
