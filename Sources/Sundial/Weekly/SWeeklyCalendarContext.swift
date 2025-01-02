@@ -7,29 +7,29 @@
 
 import SwiftUI
 
-@Observable class SWeeklyCalendarContext: SCalendarContext<SWeek> {
+class SWeeklyCalendarContext: SCalendarContext {
     // MARK: - Internal methods
 
-    override func fetchCurrentItem(from date: Date, calendar: Calendar) -> SWeek {
-        SDateHelper.fetchWeek(from: date, calendar: calendar)
+    override func fetchItem(for date: Date, calendar: Calendar) -> DayCollection {
+        SDateFeature.makeWeek(from: date, calendar: calendar, dateRange: dateRange, selectedDate: date)
     }
 
-    override func fetchNextItem(from currentItem: SWeek, calendar: Calendar) -> SWeek? {
+    override func fetchNextItem(from currentItem: DayCollection, calendar: Calendar) -> DayCollection? {
         guard let firstDayOfWeek = currentItem.days.first?.date else {
             return nil
         }
-        let week = SDateHelper.nextWeek(from: firstDayOfWeek, calendar: calendar)
+        let week = SDateFeature.makeNextWeek(from: firstDayOfWeek, calendar: calendar, dateRange: dateRange)
         guard week.days.contains(where: { !$0.isDisabled }) else {
             return nil
         }
         return week
     }
 
-    override func fetchPreviousItem(from currentItem: SWeek, calendar: Calendar) -> SWeek? {
+    override func fetchPreviousItem(from currentItem: DayCollection, calendar: Calendar) -> DayCollection? {
         guard let firstDayOfWeek = currentItem.days.first?.date else {
             return nil
         }
-        let week = SDateHelper.previousWeek(from: firstDayOfWeek, calendar: calendar)
+        let week = SDateFeature.makePreviousWeek(from: firstDayOfWeek, calendar: calendar, dateRange: dateRange)
         guard week.days.contains(where: { !$0.isDisabled }) else {
             return nil
         }

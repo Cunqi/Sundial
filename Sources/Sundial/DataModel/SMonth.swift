@@ -10,9 +10,9 @@ import Foundation
 struct SMonth: SDayCollection {
     let id = UUID()
 
-    var hasPrevious = true
+    var hasPrevious: Bool
 
-    var hasNext = true
+    var hasNext: Bool
 
     var days: [SDay]
 
@@ -23,22 +23,18 @@ struct SMonth: SDayCollection {
         return firstDay ... lastDay
     }
 
-    // MARK: - Internal methods
-
-    func updateDisabledDays(with dateRange: ClosedRange<Date>) -> SMonth {
-        guard let firstDay = days.first?.date, let lastDay = days.last?.date else {
-            return self
+    var numOfLeadingDays: Int {
+        guard let firstDayOfMonth = days.first?.date else {
+            return 0
         }
-        let hasPrevious = dateRange.lowerBound < firstDay
-        let hasNext = dateRange.upperBound > lastDay
+        return firstDayOfMonth.weekday(calendar: .current) - 1
+    }
 
-        return SMonth(
-            hasPrevious: hasPrevious,
-            hasNext: hasNext,
-            days: days.map { day in
-                let isDisabled = !dateRange.contains(day.date)
-                return SDay(date: day.date, isDisabled: isDisabled)
-            }
-        )
+    // MARK: - Initializers
+
+    init(days: [SDay] = [], hasPrevious: Bool = true, hasNext: Bool = true) {
+        self.days = days
+        self.hasPrevious = hasPrevious
+        self.hasNext = hasNext
     }
 }

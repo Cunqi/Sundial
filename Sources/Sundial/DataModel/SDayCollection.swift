@@ -7,9 +7,9 @@
 
 import Foundation
 
-protocol SDayCollection: Identifiable {
+public protocol SDayCollection: Identifiable {
 
-    var days: [SDay] { get }
+    var days: [SDay] { get set }
 
     var hasPrevious: Bool { get }
 
@@ -17,5 +17,5 @@ protocol SDayCollection: Identifiable {
 
     var dateRange: ClosedRange<Date>? { get }
 
-    func updateDisabledDays(with dateRange: ClosedRange<Date>) -> Self
+    var numOfLeadingDays: Int { get }
 }

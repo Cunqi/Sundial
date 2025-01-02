@@ -23,7 +23,19 @@ struct SWeek: SDayCollection {
         return firstDay ... lastDay
     }
 
-    func updateDisabledDays(with dateRange: ClosedRange<Date>) -> SWeek {
+    var numOfLeadingDays: Int {
+        0
+    }
+
+    // MARK: - Initializers
+
+    init(days: [SDay] = [], hasPrevious: Bool = true, hasNext: Bool = true) {
+        self.days = days
+        self.hasPrevious = hasPrevious
+        self.hasNext = hasNext
+    }
+
+    func updateDisabledDays(with _: ClosedRange<Date>) -> SWeek {
         self
     }
 }

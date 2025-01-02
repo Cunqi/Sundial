@@ -7,12 +7,16 @@ let package = Package(
     name: "Sundial",
     platforms: [
         .iOS(.v17),
+        .macOS(.v14),
+        .tvOS(.v17),
+        .watchOS(.v10),
     ],
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
             name: "Sundial",
-            targets: ["Sundial"]),
+            targets: ["Sundial"]
+        ),
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.

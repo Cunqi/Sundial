@@ -7,12 +7,14 @@
 
 import SwiftUI
 
-@Observable public class SCalendarMetadata {
+public class SCalendarMetadata: ObservableObject {
 
-    public var weekdaySymbols: [String] = SDateHelper.formatter.veryShortWeekdaySymbols
+    @Published public var weekdaySymbols: [String] = SDateFeature.formatter.veryShortWeekdaySymbols
 
-    public var itemFont: Font = .body
+    @Published public var itemFont: Font = .body
 
-    public var weekdayColor: Color = .secondary
+    @Published public var weekdayColor: Color = .secondary
+
+    let columns = Array(repeating: GridItem(.flexible(), spacing: .zero), count: 7)
 
 }

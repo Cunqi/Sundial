@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct SCalendarWeekdayView: View {
-    @Environment(SCalendarMetadata.self) var metadata
+    var metadata: SCalendarMetadata
 
     var body: some View {
         HStack(spacing: .zero) {
@@ -23,6 +23,5 @@ struct SCalendarWeekdayView: View {
 }
 
 #Preview {
-    SCalendarWeekdayView()
-        .environment(SCalendarMetadata())
+    SCalendarWeekdayView(metadata: SCalendarMetadata())
 }

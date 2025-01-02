@@ -7,35 +7,32 @@
 
 import SwiftUI
 
-@Observable class SMonthlyCalendarContext: SCalendarContext<SMonth> {
+class SMonthlyCalendarContext: SCalendarContext {
     // MARK: - Internal properties
 
-    let columns = Array(repeating: GridItem(.flexible(), spacing: .zero), count: 7)
-
-    override func fetchCurrentItem(from date: Date, calendar: Calendar) -> SMonth {
-        SDateHelper.fetchMonth(from: date, calendar: calendar)
-            .updateDisabledDays(with: dateRange)
+    override func fetchItem(for date: Date, calendar: Calendar) -> DayCollection {
+        SDateFeature.makeMonth(from: date, calendar: calendar, dateRange: dateRange, selectedDate: date)
     }
 
-    override func fetchPreviousItem(from currentItem: SMonth, calendar: Calendar) -> SMonth? {
+    override func fetchPreviousItem(from currentItem: DayCollection, calendar: Calendar) -> DayCollection? {
         guard let firstDayOfMonth = currentItem.days.first?.date else {
             return nil
         }
-        let month = SDateHelper.previousMonth(from: firstDayOfMonth, calendar: calendar)
+        let month = SDateFeature.makePreviousMonth(from: firstDayOfMonth, calendar: calendar, dateRange: dateRange)
         guard month.dateRange?.overlaps(dateRange) ?? false else {
             return nil
         }
-        return month.updateDisabledDays(with: dateRange)
+        return month
     }
 
-    override func fetchNextItem(from currentItem: SMonth, calendar: Calendar) -> SMonth? {
+    override func fetchNextItem(from currentItem: DayCollection, calendar: Calendar) -> DayCollection? {
         guard let firstDayOfMonth = currentItem.days.first?.date else {
             return nil
         }
-        let month = SDateHelper.nextMonth(from: firstDayOfMonth, calendar: calendar)
+        let month = SDateFeature.makeNextMonth(from: firstDayOfMonth, calendar: calendar, dateRange: dateRange)
         guard month.dateRange?.overlaps(dateRange) ?? false else {
             return nil
         }
-        return month.updateDisabledDays(with: dateRange)
+        return month
     }
 }
