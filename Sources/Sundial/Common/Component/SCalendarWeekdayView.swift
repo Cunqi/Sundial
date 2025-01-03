@@ -11,10 +11,10 @@ struct SCalendarWeekdayView: View {
     var metadata: SCalendarMetadata
 
     var body: some View {
-        HStack(spacing: .zero) {
+        HStack(spacing: metadata.spacing) {
             ForEach(metadata.weekdaySymbols.map { SWeekdaySymbol(symbol: $0) }) { weekday in
                 Text(weekday.symbol)
-                    .font(metadata.itemFont.bold())
+                    .font(.footnote.bold())
                     .foregroundColor(metadata.weekdayColor)
                     .frame(maxWidth: .infinity)
             }

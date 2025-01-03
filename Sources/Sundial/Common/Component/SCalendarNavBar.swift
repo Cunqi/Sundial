@@ -28,7 +28,7 @@ struct SCalendarNavBar: View {
             Spacer()
             navButtonGroup
         }
-        .padding(.horizontal)
+        .padding(.horizontal, 16)
     }
 
     @ViewBuilder
@@ -36,9 +36,10 @@ struct SCalendarNavBar: View {
         VStack(alignment: .leading, spacing: .zero) {
             if let firstDayOfCollection = collection?.days.first?.date {
                 Text(firstDayOfCollection, formatter: SCalendarDateGenerator.formatter("yyyy"))
-                    .font(.caption)
+                    .font(.body)
+                    .fontWeight(.medium)
                 Text(firstDayOfCollection, formatter: SCalendarDateGenerator.formatter("MMMM"))
-                    .font(.title.bold())
+                    .font(.title2.bold())
             }
         }
     }

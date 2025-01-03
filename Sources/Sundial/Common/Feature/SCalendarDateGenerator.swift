@@ -58,7 +58,7 @@ class SCalendarDateGenerator {
 
     // MARK: - Week
 
-    static func makeWeek(from date: Date, calendar: Calendar, dateRange: ClosedRange<Date>, selectedDate _: Date?) -> SWeek {
+    static func makeWeek(from date: Date, calendar: Calendar, dateRange: ClosedRange<Date>, selectedDate: Date?) -> SWeek {
         guard let startOfWeek = date.startOfWeek(calendar: calendar) else {
             return SWeek()
         }
@@ -72,7 +72,7 @@ class SCalendarDateGenerator {
                 id: formatter.string(from: weekDay),
                 date: weekDay,
                 isDisabled: !dateRange.contains(weekDay),
-                isSelected: weekDay.isToday(calendar: calendar)
+                isSelected: weekDay.isSameDay(as: selectedDate, calendar: calendar)
             )
         }
         return SWeek(days: weekdays)

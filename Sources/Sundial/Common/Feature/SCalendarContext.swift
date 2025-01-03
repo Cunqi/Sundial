@@ -142,9 +142,9 @@ class SCalendarContext: ObservableObject {
 
     private static func makeDataProvider(for viewType: SCalendarViewType, dateRange: ClosedRange<Date>) -> any SDayCollectionDataProvider {
         switch viewType {
-        case .month:
+        case .monthly:
             return SMonthlyDayCollectionDataProvider(dateRange: dateRange)
-        case .week:
+        case .weekly:
             return SWeeklyDayCollectionDataProvider(dateRange: dateRange)
         }
     }
