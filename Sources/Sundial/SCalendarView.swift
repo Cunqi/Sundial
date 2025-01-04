@@ -98,15 +98,15 @@ public struct SCalendarView<DayView: SDayView>: View {
             .scrollTargetBehavior(.paging)
         }
         .environmentObject(context)
-        .task(id: calendarViewType) {
-            context.setupItems(from: selectedDate, calendarViewType: calendarViewType)
-            displayDate = selectedDate
+        .task {
+            setupItems(from: selectedDate, calendarViewType: calendarViewType)
         }
         .onChange(of: context.currentItemIndex) { _, _ in
             context.markAsNeedsToFetchMoreItems()
 
             if let currentItem = context.currentItem,
-               currentItem.days.contains(where: { $0.isSameDay(as: selectedDate, calendar: context.coordinator.calendar) }) {
+               currentItem.days.contains(where: { $0.isSameDay(as: selectedDate, calendar: context.coordinator.calendar) })
+            {
                 displayDate = selectedDate
             } else {
                 displayDate = context.currentItem?.days.first?.date
@@ -116,32 +116,55 @@ public struct SCalendarView<DayView: SDayView>: View {
             context.updateItemsIfNeeded(from: newValue)
             displayDate = selectedDate
         }
+        .onChange(of: calendarViewType) { _, _ in
+            withAnimation(.snappy) {
+                setupItems(from: selectedDate, calendarViewType: calendarViewType)
+            }
+        }
     }
 
     @ViewBuilder
     func makeCalendarDayCollectionView(index: Int) -> some View {
         let dayCollection = context.items[index]
 
-        LazyVGrid(columns: metadata.columns, spacing: metadata.spacing) {
+        var numOfRows: Int {
+            Int(ceil(Double(dayCollection.numOfLeadingDays + dayCollection.days.count) / Double(metadata.columns.count)))
+        }
+
+        var aspectRatio: Double {
+            let ratio = numOfRows < 6 ? 1.5 : 1.25
+            return 1 / ratio
+        }
+
+        var spacing: CGFloat {
+            return numOfRows < 6 ? 10 : 8
+        }
+
+        LazyVGrid(columns: metadata.columns, spacing: spacing) {
             ForEach(0 ..< dayCollection.numOfLeadingDays, id: \.self) { _ in
                 Spacer()
             }
 
             ForEach(dayCollection.days) { day in
                 dayViewBuilder(day, context.coordinator)
+                    .aspectRatio(aspectRatio, contentMode: .fit)
                     .onTapGesture {
                         withAnimation(.snappy) {
                             selectedDate = day.date
                         }
-                    }
-                    .transaction { transaction in
-                        transaction.animation = .snappy
                     }
             }
         }
         .transaction { transaction in
             transaction.animation = nil
         }
+    }
+
+    // MARK: - Private methods
+
+    private func setupItems(from date: Date, calendarViewType: SCalendarViewType) {
+        context.setupItems(from: date, calendarViewType: calendarViewType)
+        displayDate = selectedDate
     }
 }
 
